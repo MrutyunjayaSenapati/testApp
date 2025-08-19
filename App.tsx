@@ -1,37 +1,54 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View, Text, PermissionsAndroid } from "react-native";
+import MapView from "react-native-maps";
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+export default function App() {
+  const [locationPermission, setLocationPermission] = useState(false);
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+  async function requestLocationPermission() {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: "Location Permission",
+          message: "This app needs access to your location.",
+          buttonNeutral: "Ask Me Later",
+          buttonNegative: "Cancel",
+          buttonPositive: "OK",
+        }
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log("You can use the location");
+        setLocationPermission(true); // ✅ allow map
+      } else {
+        console.log("Location permission denied");
+        setLocationPermission(false);
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  }
 
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
-  );
-}
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
+  return locationPermission ? (
     <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
+      <MapView
+        style={styles.map}
+        showsUserLocation={true}
+        initialRegion={{
+          latitude: 28.6139,
+          longitude: 77.2090,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
       />
+    </View>
+  ) : (
+    <View style={styles.container}>
+      <Text>Requesting Location Permission...</Text>
     </View>
   );
 }
@@ -40,6 +57,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  map: {
+    flex: 1,
+  },
 });
-
-export default App;
